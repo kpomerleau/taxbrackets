@@ -33,7 +33,7 @@ refyear<-2014
 #Input base-year parameters:
 
   #Base Year 1992 brackets (Tops of Brackets)
-  baseyearmarried1992<-c(44200,89150)
+  baseyearmarried1992<-c(36900,89150) #The 15% bracket has a special provision for married individuals (36900 number get replaced eventually)
   names(baseyearmarried1992) = c("15%", "25%")
   baseyearheadofhousehold1992<-c(29600,76400)
   names(baseyearheadofhousehold1992) = c("15%", "25%")
@@ -91,6 +91,8 @@ refyear<-2014
 
   baseyearmarried1992<-baseyearmarried1992-(baseyearmarried1992%%50)
   baseyearsingle1992<-baseyearsingle1992-(baseyearsingle1992%%50)
+    #15% bracket marriage penalty fix
+      baseyearmarried1992["15%"]<-baseyearsingle1992["15%"]*2
   baseyearheadofhousehold1992<-baseyearheadofhousehold1992-(baseyearheadofhousehold1992%%50)
   
   baseyearmarried1993<-baseyearmarried1993-(baseyearmarried1993%%50)
