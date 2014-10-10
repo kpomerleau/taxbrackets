@@ -9,18 +9,17 @@ rm(list=ls())
 
 #Load Data
 cpi<-read.csv("cpitables.csv", header = TRUE, fill = TRUE, sep = ",")
-
 ##########################Consumer Price Index Calculations###########################
 
-cpi$average = NULL
+
+#Calendar Year
+
 cpi$fiscalyear = NULL
+cpi$calendar<-rowMeans(cpi[,2:13], na.rm=TRUE)
 
-for (i in 2:length(cpi[,1])){ 
-  cpi$average[i]<-rowMeans(cpi[i,2:12], na.rm=TRUE)
-  }
+#Fiscal Year. Starting in FY1914. Do not have data on CY1912, so cannot complete FY 1913
 
-#Starting in FY1914. Do not have data on CY1912, so cannot complete FY 2013
-
+cpi$fiscalyear = NULL
 for (i in 2:length(cpi[,1])){
   cpi$fiscalyear[i]<-sum(rowSums(cpi[i-1,10:13]),rowSums(cpi[i,2:9]))/12
 }
