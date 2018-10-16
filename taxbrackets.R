@@ -1,6 +1,6 @@
 # Sets the working directory. This sets it to the "index" folder on my desktop
 
-setwd("C:/Users/kep/Documents/GitHub/taxbrackets")
+setwd("C:/Users/kep/Dropbox (Tax Foundation)/Documents/GitHub/taxbrackets")
 
 
 #Clears all datasets and variables from memory
@@ -9,6 +9,7 @@ rm(list=ls())
 
 #Load Data
 cpi<-read.csv("cpitables.csv", header = TRUE, fill = TRUE, sep = ",")
+chained_cpi<-read.csv("chainedcpitables.csv", header = TRUE, fill = TRUE, sep = ",")
 ##########################Consumer Price Index Calculations###########################
 
 
@@ -25,7 +26,17 @@ for (i in 2:length(cpi[,1])){
 }
 
 #Reference Year (This sets the year to which you are adjusting)
-refyear<-2014
+refyear<-2018
+
+  #update for chained CPI, October 2018
+
+chained_cpi$calendar = NULL
+chained_cpi$calendar<-rowMeans(chained_cpi[,2:13], na.rm=TRUE)
+
+chained_cpi$fiscalyear = NULL
+for (i in 2:length(chained_cpi[,1])){
+  chained_cpi$fiscalyear[i]<-sum(rowSums(chained_cpi[i-1,10:13]),rowSums(chained_cpi[i,2:9]))/12
+}
 
 #####################Ordinary Income Tax Bracket calculations##########################
 
@@ -63,6 +74,12 @@ refyear<-2014
   names(baseyearheadofhousehold2012) = c("35%")
   baseyearmarried2012<-c(450000)
   names(baseyearmarried2012) = c("35%")
+  
+  # Updated parameters, TCJA, October 2018:
+  
+  baseyearmarriedTCJA<-c(19050,77400,165000,315000,400000,600000)
+  baseyearheadofhouseholdTCJA<-c(13600,51800,82500,157500,200000,500000)
+  baseyearsingleTCJA<-c(9525,38700,82500,157500,200000,500000)
 
 #Adjust Each bracket for inflation by its base year
 
@@ -86,6 +103,12 @@ refyear<-2014
   baseyearheadofhousehold2012<-baseyearheadofhousehold2012*(cpi$fiscalyear[cpi$Year==refyear]/cpi$fiscalyear[cpi$Year==2012])
   baseyearmarried2012<-baseyearmarried2012*(cpi$fiscalyear[cpi$Year==refyear]/cpi$fiscalyear[cpi$Year==2012])
 
+# UPDATE: adjust TCJA tax brackets to chained CPI U
+  
+  baseyearmarriedTCJA<-baseyearmarriedTCJA*(chained_cpi$fiscalyear[chained_cpi$year==refyear]/chained_cpi$fiscalyear[chained_cpi$year==2017])
+  baseyearsingleTCJA<-baseyearsingleTCJA*(chained_cpi$fiscalyear[chained_cpi$year==refyear]/chained_cpi$fiscalyear[chained_cpi$year==2017])
+  baseyearheadofhouseholdTCJA<-baseyearheadofhouseholdTCJA*(chained_cpi$fiscalyear[chained_cpi$year==refyear]/chained_cpi$fiscalyear[chained_cpi$year==2017])
+  
 #Rounding Each base Year by IRS Method (Down to Nearest $50 for all brackets Except for 10% single bracket ($25))
 
   baseyearmarried1992<-baseyearmarried1992-(baseyearmarried1992%%50)
@@ -105,6 +128,12 @@ refyear<-2014
   baseyearsingle2012<-baseyearsingle2012-(baseyearsingle2012%%50)
   baseyearheadofhousehold2012<-baseyearheadofhousehold2012-(baseyearheadofhousehold2012%%50)
   baseyearmarried2012<-baseyearmarried2012-(baseyearmarried2012%%50)
+  
+# UPDATE: rounding each calculated parameter to nearest 50
+  
+  baseyearmarriedTCJA<-baseyearmarriedTCJA - baseyearmarriedTCJA%%50
+  baseyearsingleTCJA<-baseyearsingleTCJA - baseyearsingleTCJA%%25
+  baseyearheadofhouseholdTCJA<-baseyearheadofhouseholdTCJA - baseyearheadofhouseholdTCJA%%50
 
 #Combine each baseyear to get the three brackets (remember, these are bracket tops!)
 #There is a 39.6 percent bracket on highest income
